@@ -27,7 +27,7 @@ generated the models, you'll be able to create data to test your application.
 You can run your Flask API on [`localhost:5555`](http://localhost:5555) by running:
 
 ```console
-$ rails s
+$ python app.py
 ```
 
 You can run your React app on [`localhost:4000`](http://localhost:4000) by running:
@@ -65,19 +65,19 @@ Start by creating the models and migrations for the following database tables:
 
 ![cosmic_erd](https://curriculum-content.s3.amazonaws.com/phase-4/mock-challenge-cosmic-challenge/cosmic_erd.png)
 
-If you use a Rails generator to create the models, make sure to use the
-`--no-test-framework` flag to avoid overwriting the test files.
-
 Add any code needed in the model files to establish the relationships.
 
 Then, run the migrations and seed file:
 
 ```console
-$ rails db:migrate db:seed
+$ flask db revision --autogenerate -m'create tables'
+$ flask db upgrade head
 ```
 
 > If you aren't able to get the provided seed file working, you are welcome to
 > generate your own seed data to test the application.
+
+***
 
 ## Validations
 
@@ -119,7 +119,7 @@ scientist.
 ]
 ```
 
-### GET /scientists/:id
+### GET /scientists/<int:id>
 
 If the `Scientist` exists, return JSON data in the format below. **Note**: you will
 need to serialize the data for this response differently than for the
@@ -156,7 +156,7 @@ the appropriate HTTP status code:
 
 ```json
 {
-  "error": "Scientist not found"
+  "error": "404: Scientist not found"
 }
 ```
 
@@ -190,14 +190,14 @@ along with the appropriate HTTP status code:
 
 ```json
 {
-  "errors": ["validation errors"]
+  "error": "400: Validation error"
 }
 ```
 
 ### PATCH /scientists/:id
 
-This route should update an existing `Scientist`. It should accept an object with one or more of the
-following properties in the body of the request:
+This route should update an existing `Scientist`. It should accept an object
+with one or more of the following properties in the body of the request:
 
 ```json
 {
@@ -208,7 +208,7 @@ following properties in the body of the request:
 ```
 
 If the `Scientist` is updated successfully, send back a response with the updated
-`Scientist` and a 202 `:accepted` status code:
+`Scientist` and a 202 `accepted` status code:
 
 ```json
 {
@@ -224,7 +224,7 @@ along with the appropriate HTTP status code:
 
 ```json
 {
-  "errors": ["validation errors"]
+  "error": "400: Validation error"
 }
 ```
 
@@ -236,7 +236,7 @@ OR, given an invalid ID, the appropriate HTTP status code, and the following JSO
 }
 ```
 
-### DELETE /scientists/:id
+### DELETE /scientists/<int:id>
 
 If the `Scientist` exists, it should be removed from the database, along with
 any `Mission`s that are associated with it (a `Mission` belongs
@@ -251,7 +251,7 @@ the appropriate HTTP status code:
 
 ```json
 {
-  "error": "Scientist not found"
+  "error": "404: Scientist not found"
 }
 ```
 
@@ -293,7 +293,9 @@ following properties in the body of the request:
 }
 ```
 
-If the `Mission` is created successfully, send back a response with the `planet` associated with the new `Mission` (contrary to convention, which normally dictates the response would include data about the _mission_ that was created):
+If the `Mission` is created successfully, send back a response with the `planet`
+associated with the new `Mission` (contrary to convention, which normally
+dictates the response would include data about the _mission_ that was created):
 
 ```json
 {
@@ -310,6 +312,6 @@ along with the appropriate HTTP status code:
 
 ```json
 {
-  "errors": ["validation errors"]
+  "error": "400: Validation error"
 }
 ```
