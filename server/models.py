@@ -20,11 +20,24 @@ class Planet(db.Model, SerializerMixin):
     __tablename__ = 'planets'
 
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    distance_from_earth = db.Column(db.String)
+    nearest_star = db.Column(db.String)
+    image = db.Column(db.String)
+
+    def __repr__(self):
+        return f'<Planet {self.id}: {self.name}>'
 
 class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
 
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    field_of_study = db.Column(db.String)
+    avatar = db.Column(db.String)
+
+    def __repr__(self):
+        return f'<Scientist {self.id}: {self.name}>'
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
