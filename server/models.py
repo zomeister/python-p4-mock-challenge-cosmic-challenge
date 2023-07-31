@@ -24,12 +24,12 @@ class Planet(db.Model, SerializerMixin):
     name = db.Column(db.String)
     distance_from_earth = db.Column(db.Integer)
     nearest_star = db.Column(db.String)
-
-    # Add relationship
+    
     missions = db.relationship('Mission', back_populates='planet', cascade="all, delete-orphan")
     scientists = association_proxy('missions', 'scientist', creator=lambda s: Mission(scientist=s))
-    serialize_rules = ('-missions.planet',)
-    # Add serialization rules
+    
+    serialize_rules = ('-missions.planet', '-scientists.planets')
+    
     def __repr__(self):
         return f"<Planet {self.name}, id: {self.id}>"
 
@@ -39,12 +39,12 @@ class Scientist(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     field_of_study = db.Column(db.String)
-    # Add relationship
+    
     missions = db.relationship('Mission', back_populates='scientist', cascade="all, delete-orphan")
     planets = association_proxy('missions', 'planet', creator=lambda p: Mission(planet=p))
-    # Add serialization rules
-    serialize_rules = ('-missions.scientist',)
-    # Add validation
+    
+    serialize_rules = ('-missions.scientist', '-planets.scientists')
+    
     @validates('name')
     def validate_name(self, key, name):
         if not isinstance(name, str) or len(name) < 1:
@@ -54,7 +54,7 @@ class Scientist(db.Model, SerializerMixin):
     
     @validates('field_of_study')
     def validate_field_of_study(self, key, field_of_study):
-        if not isinstance(field_of_study, str) or len(field_of_study) < 1:
+        if not field_of_study or len(field_of_study) < 1:
             raise ValueError(f"Name must be a string with at least one character. Got {field_of_study}")
         else:
             return field_of_study
@@ -65,19 +65,16 @@ class Scientist(db.Model, SerializerMixin):
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-
-    # Add relationships
     
-    scientist = db.relationship('Scientist', back_populates='missions')
-    planet = db.relationship('Planet', back_populates='missions')
-    # Add serialization rules
-    serialize_rules = ('-missions.scientist', '-missions.planet')
     scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'))
     planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
-    # Add validation
+    scientist = db.relationship('Scientist', back_populates='missions')
+    planet = db.relationship('Planet', back_populates='missions')
+    
+    serialize_rules = ('-scientist.missions', '-planet.missions')
+    
     @validates('name')
     def validate_name(self, key, name):
         if not isinstance(name, str) or len(name) < 1:
@@ -87,28 +84,31 @@ class Mission(db.Model, SerializerMixin):
         
     @validates('planet_id')
     def validate_planet_id(self, key, planet_id):
-        if not isinstance(planet_id, int):
-            raise ValueError(f"Planet ID must be an integer. Got {planet_id}")
-        elif planet_id < 0:
-            raise ValueError(f"Planet ID must be a positive integer. Got {planet_id}")
-        elif not Planet.query.get(planet_id):
-            raise ValueError(f"Planet ID must be a valid ID. Got {planet_id}")
-        else:
+        if planet_id is not None:
             return planet_id
+        raise ValueError('Mission must have planet ID.')
+        # if not isinstance(planet_id, int):
+        #     raise ValueError(f"Planet ID must be an integer. Got {planet_id}")
+        # elif planet_id < 0:
+        #     raise ValueError(f"Planet ID must be a positive integer. Got {planet_id}")
+        # elif not Planet.query.get(planet_id):
+        #     raise ValueError(f"Planet ID must be a valid ID. Got {planet_id}")
+        # else:
+        #     return planet_id
         
     @validates('scientist_id')
     def validates_scientist_id(self, key, scientist_id):
-        if not isinstance(scientist_id, int):
-            raise ValueError(f"Planet ID must be an integer. Got {scientist_id}")
-        elif scientist_id < 0:
-            raise ValueError(f"Planet ID must be a positive integer. Got {scientist_id}")
-        elif not Planet.query.get(scientist_id):
-            raise ValueError(f"Planet ID must be a valid ID. Got {scientist_id}")
-        else:
+        if scientist_id is not None:
             return scientist_id
+        raise ValueError('Mission must have scientist ID.')
+        # if not isinstance(scientist_id, int):
+        #     raise ValueError(f"Planet ID must be an integer. Got {scientist_id}")
+        # elif scientist_id < 0:
+        #     raise ValueError(f"Planet ID must be a positive integer. Got {scientist_id}")
+        # elif not Planet.query.get(scientist_id):
+        #     raise ValueError(f"Planet ID must be a valid ID. Got {scientist_id}")
+        # else:
+        #     return scientist_id
         
     def __repr__(self):
         return f"<Mission {self.name}, id: {self.id}>"
-
-
-# add any models you may need.
